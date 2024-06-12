@@ -275,6 +275,26 @@ class TestProductRoutes(TestCase):
         for product in data:
             self.assertEqual(product['category'], test_category.name)
 
+    def test_list_by_category_invalid(self):
+        """It should not list products for an invalid category"""
+        test_batch = self._create_products(5)
+
+        response = self.client.get(BASE_URL, query_string=f"category={quote_plus('invalid')}")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_list_by_availablity(self):
+        """It should list products filtered by availability"""
+        test_batch = self._create_products(5)
+        test_available = test_batch[0].available
+        available_count = len([product for product in test_batch if product.available == test_available])
+        
+        response = self.client.get(BASE_URL, query_string=f"available={quote_plus(str(test_available))}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), available_count)
+        for product in data:
+            self.assertEqual(product['available'], test_available)
+
 
     ######################################################################
     # Utility functions

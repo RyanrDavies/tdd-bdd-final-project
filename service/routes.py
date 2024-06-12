@@ -20,7 +20,7 @@ Product Store Service with UI
 """
 from flask import jsonify, request, abort
 from flask import url_for  # noqa: F401 pylint: disable=unused-import
-from service.models import Product, Category
+from service.models import Product, Category, DataValidationError
 from service.common import status  # HTTP Status Codes
 from . import app
 
@@ -107,11 +107,18 @@ def list_products():
     app.logger.info("Request to list products")
     name = request.args.get("name", None)
     category = request.args.get("category", None)
+    available = request.args.get("available", None)
     if name:
         products = Product.find_by_name(name)
     elif category:
-        category_value = getattr(Category, category.upper())
+        try:
+            category_value = getattr(Category, category.upper())
+        except AttributeError as error:
+            raise DataValidationError("Unknown category: " + error.args[0]) from error
         products = Product.find_by_category(category_value)
+    elif available:
+        available_value = available in ["True", "true", "1"]
+        products = Product.find_by_availability(available_value)
     else:
         products = Product.all()
     data = [product.serialize() for product in products]
