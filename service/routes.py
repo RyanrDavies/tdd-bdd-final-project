@@ -132,6 +132,8 @@ def list_products():
 #
 # PLACE YOUR CODE HERE TO READ A PRODUCT
 #
+
+
 @app.route('/products/<product_id>', methods=['GET'])
 def get_products(product_id):
     """This endpoint reads a product and returns it as JSON"""
@@ -149,6 +151,8 @@ def get_products(product_id):
 #
 # PLACE YOUR CODE TO UPDATE A PRODUCT HERE
 #
+
+
 @app.route('/products/<product_id>', methods=['PUT'])
 def update_products(product_id):
     """This endpoint updates a product and returns it as JSON"""

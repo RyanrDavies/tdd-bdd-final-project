@@ -186,7 +186,7 @@ class TestProductRoutes(TestCase):
     def test_update_product(self):
         """It should update a product"""
         test_product = ProductFactory()
-        response = self.client.post(BASE_URL,json=test_product.serialize())
+        response = self.client.post(BASE_URL, json=test_product.serialize())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         new_product = response.get_json()
@@ -196,7 +196,7 @@ class TestProductRoutes(TestCase):
 
         updated_product = response.get_json()
         self.assertEqual(updated_product['description'], new_product['description'])
-    
+
     def test_update_product_not_found(self):
         """It should not update if the product is not found"""
         test_product = ProductFactory()
@@ -206,13 +206,12 @@ class TestProductRoutes(TestCase):
     def test_update_product_invalid(self):
         """It should not update if the update data is invalid"""
         test_product = ProductFactory()
-        response = self.client.post(BASE_URL,json=test_product.serialize())
+        response = self.client.post(BASE_URL, json=test_product.serialize())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         new_product = response.get_json()
         new_product['description'] = "New Description"
         response = self.client.put(f"{BASE_URL}/{new_product['id']}", json={})
-        logging.debug(f"response_code: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_post_existing_product(self):
@@ -224,7 +223,7 @@ class TestProductRoutes(TestCase):
     def test_delete_product(self):
         """It should delete a product"""
         test_product = self._create_products(1)[0]
-        
+
         response = self.client.delete(f"{BASE_URL}/{test_product.id}")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
@@ -242,7 +241,7 @@ class TestProductRoutes(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.get_json()), 0)
 
-        test_batch = self._create_products(5)
+        _ = self._create_products(5)
 
         response = self.client.get(BASE_URL)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -254,7 +253,7 @@ class TestProductRoutes(TestCase):
         test_batch = self._create_products(5)
         test_name = test_batch[0].name
         name_count = len([product for product in test_batch if product.name == test_name])
-        
+
         response = self.client.get(BASE_URL, query_string=f"name={quote_plus(test_name)}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
@@ -267,7 +266,7 @@ class TestProductRoutes(TestCase):
         test_batch = self._create_products(5)
         test_category = test_batch[0].category
         category_count = len([product for product in test_batch if product.category == test_category])
-        
+
         response = self.client.get(BASE_URL, query_string=f"category={quote_plus(test_category.name)}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
@@ -277,7 +276,7 @@ class TestProductRoutes(TestCase):
 
     def test_list_by_category_invalid(self):
         """It should not list products for an invalid category"""
-        test_batch = self._create_products(5)
+        _ = self._create_products(5)
 
         response = self.client.get(BASE_URL, query_string=f"category={quote_plus('invalid')}")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -287,14 +286,13 @@ class TestProductRoutes(TestCase):
         test_batch = self._create_products(5)
         test_available = test_batch[0].available
         available_count = len([product for product in test_batch if product.available == test_available])
-        
+
         response = self.client.get(BASE_URL, query_string=f"available={quote_plus(str(test_available))}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
         self.assertEqual(len(data), available_count)
         for product in data:
             self.assertEqual(product['available'], test_available)
-
 
     ######################################################################
     # Utility functions

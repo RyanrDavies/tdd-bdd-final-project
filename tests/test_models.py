@@ -136,16 +136,15 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(len(products), 1)
         self.assertEqual(products[0].id, product.id)
         self.assertEqual(products[0].description, product.description)
-    
+
     def test_invalid_update_a_product(self):
-        """It should raise error when updating"""
+        """It should raise error when no new data provided"""
         product = ProductFactory()
         product.id = None
         product.create()
         app.logger.info(f"Testing update a product with product: {product}")
         self.assertIsNotNone(product.id)
         product.id = None
-        new_description = "New product description"
         self.assertRaises(DataValidationError, product.update)
 
     def test_delete_a_product(self):
@@ -218,7 +217,7 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(found_products.count(), expected_count)
         for found_product in found_products:
             self.assertEqual(found_product.category, first_product_category)
-    
+
     def test_find_by_price(self):
         """It should fetch products by price"""
         product_batch = []
@@ -269,13 +268,11 @@ class TestProductModel(unittest.TestCase):
     def test_deserialize_invalid_type(self):
         """It should raise an error if attribute is unknown"""
         product = ProductFactory()
-        product_dict = product.serialize()
         self.assertRaises(DataValidationError, product.deserialize, None)
-      
+
     def test_deserialize_invalid_attribute(self):
         """It should raise an error if attribute is unknown"""
         product = ProductFactory()
         product_dict = product.serialize()
         product_dict['category'] = "invalid"
         self.assertRaises(DataValidationError, product.deserialize, product_dict)
-      
