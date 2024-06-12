@@ -28,6 +28,7 @@ import os
 import logging
 from decimal import Decimal
 from unittest import TestCase
+from urllib.parse import quote_plus
 from service import app
 from service.common import status
 from service.models import db, init_db, Product
@@ -214,6 +215,12 @@ class TestProductRoutes(TestCase):
         logging.debug(f"response_code: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_post_existing_product(self):
+        """It should not allow a post request on an existing product"""
+        test_product = self._create_products(1)[0]
+        response = self.client.post(f"{BASE_URL}/{test_product.id}", json=test_product.serialize())
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
     def test_delete_product(self):
         """It should delete a product"""
         test_product = self._create_products(1)[0]
@@ -228,6 +235,45 @@ class TestProductRoutes(TestCase):
         """It should not delete a product that doesn't exist"""
         response = self.client.delete(f"{BASE_URL}/0")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_list_all_products(self):
+        """It should list all products"""
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.get_json()), 0)
+
+        test_batch = self._create_products(5)
+
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 5)
+
+    def test_list_by_name(self):
+        """It should list products filtered by name"""
+        test_batch = self._create_products(5)
+        test_name = test_batch[0].name
+        name_count = len([product for product in test_batch if product.name == test_name])
+        
+        response = self.client.get(BASE_URL, query_string=f"name={quote_plus(test_name)}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), name_count)
+        for product in data:
+            self.assertEqual(product['name'], test_name)
+
+    def test_list_by_category(self):
+        """It should list products filtered by category"""
+        test_batch = self._create_products(5)
+        test_category = test_batch[0].category
+        category_count = len([product for product in test_batch if product.category == test_category])
+        
+        response = self.client.get(BASE_URL, query_string=f"category={quote_plus(test_category.name)}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), category_count)
+        for product in data:
+            self.assertEqual(product['category'], test_category.name)
 
 
     ######################################################################
