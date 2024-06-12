@@ -202,7 +202,32 @@ class TestProductRoutes(TestCase):
         response = self.client.put(f"{BASE_URL}/0", json=test_product.serialize())
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_update_product_invalid(self):
+        """It should not update if the update data is invalid"""
+        test_product = ProductFactory()
+        response = self.client.post(BASE_URL,json=test_product.serialize())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+        new_product = response.get_json()
+        new_product['description'] = "New Description"
+        response = self.client.put(f"{BASE_URL}/{new_product['id']}", json={})
+        logging.debug(f"response_code: {response.status_code}")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_delete_product(self):
+        """It should delete a product"""
+        test_product = self._create_products(1)[0]
+        
+        response = self.client.delete(f"{BASE_URL}/{test_product.id}")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        response = self.client.get(f"{BASE_URL}/{test_product.id}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_product_not_found(self):
+        """It should not delete a product that doesn't exist"""
+        response = self.client.delete(f"{BASE_URL}/0")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
     ######################################################################
